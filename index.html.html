@@ -1,0 +1,833 @@
+import React, { useState } from 'react';
+
+// 易經數字磁場分類與意義詳解數據
+const numberMeanings = {
+    "生氣": {
+        category: "四吉數",
+        name: "生氣",
+        combinations: ["14", "41", "67", "76", "93", "39", "28", "82"],
+        coreMeaning: "貴人相助與活力",
+        advantages: "樂天派，凡事不強求，熱心助人，人緣極佳，常有意外好運，具領導力與創業精神，情商高，彈性大。",
+        disadvantages: "企圖心不旺盛，隨遇而安，易知足，可能懶散，若無目標可能無法充分發揮潛力。"
+    },
+    "天醫": {
+        category: "四吉數",
+        name: "天醫",
+        combinations: ["13", "31", "68", "86", "94", "49", "72", "27"],
+        coreMeaning: "財富、智慧與健康",
+        advantages: "財富能量強，賺錢有如神助，諸事順遂，聰明智慧，有貴氣，家庭背景佳，外型氣質好，適合業務，正財，婚姻美滿。",
+        disadvantages: "極度善良，缺乏心機，易被蒙騙損失小財，若無適當「保護機制」可能成為弱點。"
+    },
+    "延年": {
+        category: "四吉數",
+        name: "延年",
+        combinations: ["19", "91", "78", "87", "34", "43", "26", "62"],
+        coreMeaning: "領導、責任與長久",
+        advantages: "決斷力強，獨當一面，生命力與意志力極強，綿綿不絕，具大將之風，有貴人偏財，責任心強，善於管理、談判，做事嚴謹，忠誠度高，能屈能伸。",
+        disadvantages: "作風強勢，一板一眼，缺乏彈性變通，不易溝通，固執，易以自身標準要求他人，對女性可能影響婚姻（過於強勢）。"
+    },
+    "伏位": {
+        category: "四吉數",
+        name: "伏位",
+        combinations: ["11", "22", "33", "44", "66", "77", "88", "99"],
+        coreMeaning: "穩定、蓄勢與財庫",
+        advantages: "有耐心，責任心強，幽默風趣，善於溝通協調，謹慎小心，蓄勢待發，臥虎藏龍，財庫穩固，具長期探索精神，慢工出細活。",
+        disadvantages: "內心矛盾，缺乏安全感，主觀意識強，作風保守，猶豫不決，易錯失機會，懶散拖延，初期進展較慢。"
+    },
+    "絕命": {
+        category: "四凶數",
+        name: "絕命",
+        combinations: ["12", "21", "69", "96", "84", "48", "37", "73"],
+        coreMeaning: "波動、極端與耗損",
+        advantages: "意志力驚人，積極進取，判斷力敏銳，具備拓展能力，適合創意及軍師角色，鬼點子多，在危機處理或創新突破中具潛力。",
+        disadvantages: "主觀自我，不擅溝通，衝動暴躁，情緒不穩，易輕信朋友，好賭，易有官司，大起大落，非富即貧，人際不合群，健康注意心血管、肝腎、泌尿系統。"
+    },
+    "五鬼": {
+        category: "四凶數",
+        name: "五鬼",
+        combinations: ["18", "81", "97", "79", "36", "63", "42", "24"],
+        coreMeaning: "詭異、變動與破壞",
+        advantages: "才華出眾，反應敏捷，學習能力強，思維多變，鬼點子多，創意十足，易與玄學結緣，適合特種行業或非傳統事業，精力充沛，鬥志強。",
+        disadvantages: "好幻想，反覆無常，不穩定，缺乏安全感，疑心病重，走極端，易有血光之災，財來財去難守財，情感不忠貞，易憤世嫉俗，易破壞他人感情，健康注意免疫系統、心臟、血液，人際口不對心，易反目成仇。"
+    },
+    "六煞": {
+        category: "四凶數",
+        name: "六煞",
+        combinations: ["16", "61", "47", "74", "38", "83", "29", "92"],
+        coreMeaning: "人際、情感與糾紛",
+        advantages: "俊男美女，時尚感強，聰明會變通，異性緣好，溝通力強，有獨特魅力與氣場，能四處賺錢，擅長公關銷售，察言觀色。",
+        disadvantages: "優柔寡斷，情緒化，易有爛桃花及三角關係，不易守財，因情損財，人際關係不佳，感情不順，管理工作不適合，健康注意呼吸系統，家庭易有摩擦，易產生債務問題，易情緒低落和焦慮。"
+    },
+    "禍害": {
+        category: "四凶數",
+        name: "禍害",
+        combinations: ["17", "71", "89", "98", "46", "64", "23", "32"],
+        coreMeaning: "病痛、口舌與意外",
+        advantages: "雄辯滔滔，口才極佳，有衝勁，反應快，適合以口為生行業（律師、老師、主持人），思維敏捷。",
+        disadvantages: "性急，衝動，易招口角是非，愛面子，脾氣暴躁，易患病（男性消化系統、女性婦科），情緒性消費易破財，小人多，直言不諱易得罪人，健康注意口腔、喉嚨、胸腔及淋巴腺。"
+    }
+};
+
+// 數字組合的疊加效應與深層含義
+const combinedMeaningRules = [
+    // 吉星疊加 (Auspicious Star Combinations)
+    { names: ["天醫", "延年"], description: "此組合將「天醫」的財富智慧與「延年」的事業領導力完美結合，預示著財富與事業的雙重豐收。使用者不僅有賺錢的能力，更有將財富管理好、事業做大做強的執行力和領導力，常有驚人表現，感情亦趨於穩定和諧。此為財富與事業的完美結合，能帶來穩定的財源和強大的理財能力，有助於在事業上取得突破，帶來豐厚回報。", type: "吉星疊加", strength: "強" },
+    { names: ["延年", "天醫"], description: "此組合代表踏實苦幹、入行迅速，並能快速總結經驗、行動力強。延年為因，天醫為果，若為小延年（如26）加大天醫（如68），則付出小而收穫大。此組合在事業上專業突出，能快速成為行家，但大延年（如91）可能導致工作辛苦勞碌，成為工作狂。", type: "吉星疊加", strength: "中" },
+    { names: ["生氣", "延年"], description: "「生氣」帶來貴人相助和好人緣，結合「延年」的事業能力，使人際關係和諧並轉化為事業實質進展，常有佳作。此組合情商高，心思細膩且充滿智慧，難以被人欺騙，是事業發展和突破的良好助力，有助於升職晉級。", type: "吉星疊加", strength: "強" },
+    { names: ["延年", "生氣"], description: "「延年」的領導力與「生氣」的貴人運結合，使事業發展順利，人際關係和諧。此組合能有效提升工作效率和決策力，並在遇到困難時獲得貴人幫助，常有佳作。", type: "吉星疊加", strength: "中" },
+    { names: ["伏位", "天醫"], description: "「伏位」象徵耐心和穩健，與「天醫」的財富能量結合，預示著財富將以細水長流的方式穩健累積，錢財來源廣泛，甚至不需過多努力也能獲得。此組合會讓人對金錢多加思考，有助於省錢和持續的財源。", type: "吉星疊加", strength: "中" },
+    { names: ["天醫", "伏位"], description: "「天醫」的財富能量與「伏位」的持續性結合，代表財源持續不斷，錢財來源廣泛。此組合能帶來穩定的收入，甚至不需過多努力也能獲得財富。然而，伏位也可能讓天醫缺乏安全感，需結合前面的數字進行分析。", type: "吉星疊加", strength: "中" },
+    { names: ["生氣", "伏位"], description: "「生氣」的貴人運與「伏位」的持續性結合，預示著持續不斷的貴人相助。此組合能帶來穩定的好人緣和樂觀心態，但可能因過於隨遇而安而缺乏事業上的堅持。", type: "吉星疊加", strength: "弱" },
+    { names: ["伏位", "生氣"], description: "「伏位」的耐心與「生氣」的樂觀結合，使人在面對挑戰時能保持冷靜，並持續獲得貴人幫助。此組合能提升伏位的上進心，但若能量過強，可能導致過於安於現狀。", type: "吉星疊加", strength: "弱" },
+    { names: ["天醫", "生氣"], description: "此組合能帶來財富，並在貴人相助下獲得升職加薪的機會，適合擔任單位主管。使用者通常情商高，善於管理人脈，貴人帶財。", type: "吉星疊加", strength: "強" },
+    { names: ["生氣", "天醫"], description: "「生氣」的貴人能量能將「天醫」的財富能量放大，財富來源多元且輕鬆，是典型的「貴人帶財」組合，財運亨通，生活富足。", type: "吉星疊加", strength: "強" },
+    { names: ["延年", "伏位"], description: "「延年」的行動力與「伏位」的耐心結合，做事穩紮穩打，一步一個腳印，雖然進展較慢，但基礎紮實，成果穩定。適合需要長期投入的事業。", type: "吉星疊加", strength: "中" },
+    { names: ["伏位", "延年"], description: "「伏位」的蓄勢待發遇到「延年」的責任與決斷，意味著在耐心等待後能爆發出強大的執行力，事業將穩步向前。但初期可能會有猶豫期。", type: "吉星疊加", strength: "中" },
+
+    // 凶星疊加 (Inauspicious Star Combinations)
+    { names: ["絕命", "五鬼"], description: "「絕命」的極端波動結合「五鬼」的反覆變動，形成強烈的負面能量疊加，是投資者容易虧損的數字組合，甚至可能導致傾家蕩產。投資方向容易被誤導，感情也極易破裂，甚至導致離婚。此組合野心勃勃，但若無吉星化解，則風險極高。", type: "凶星疊加", strength: "最弱" },
+    { names: ["五鬼", "絕命"], description: "「五鬼」的詭譎多變與「絕命」的衝動極端結合，導致行為反覆無常，判斷力容易失誤，尤其在投資上風險極高，財來財去難以守住。感情方面也極不穩定，易因小事引發爭執導致破裂。", type: "凶星疊加", strength: "最弱" },
+    { names: ["六煞", "禍害"], description: "「六煞」的情感困擾與「禍害」的口舌是非相互影響，可能導致因不開心而產生抱怨，進而引發家庭爭吵和人際矛盾，影響財運。錢財可能因感情或家庭事務而流失，情緒易陷入低谷。", type: "凶星疊加", strength: "弱" },
+    { names: ["禍害", "六煞"], description: "「禍害」的口舌是非與「六煞」的情緒敏感結合，容易導致因言語不當而引發人際衝突，尤其在家庭中易因小事惡化關係。財運可能因情感糾紛而受損，並可能伴隨偏桃花，健康方面需注意呼吸系統疾病。", type: "凶星疊加", strength: "弱" },
+    { names: ["六煞", "五鬼"], description: "此組合預示著感情關係的極度不穩定與複雜，容易出現第三者，甚至導致離婚。內心思維靈敏多變，城府較深，外在表現可能帶有欺騙性質。財運方面，可能因感情之事而債務纏身，破財多。", type: "凶星疊加", strength: "弱" },
+    { names: ["五鬼", "六煞"], description: "「五鬼」的變動與「六煞」的情感敏感結合，導致內心糾結，感情關係複雜且不穩定，易有偏桃花。此組合交際能力強，但可能給人留下難以捉摸的印象，財運方面也易因感情而破財。", type: "凶星疊加", strength: "弱" },
+    { names: ["六煞", "絕命"], description: "此組合是所有磁場組合中脾氣最差的之一，情緒波動大，易與家人或戀人發生衝突。財運方面能賺錢但不守財，錢財左進右出，容易負債累累，甚至因服務業而破財。健康需注意心臟、血液問題。", type: "凶星疊加", strength: "弱" }, 
+    { names: ["絕命", "六煞"], description: "「絕命」的衝動與「六煞」的情緒敏感結合，導致脾氣暴躁，人際關係緊張，尤其在家庭中易有矛盾。財運不佳，容易因衝動消費或情感問題而破財，甚至負債。健康方面要注意心血管、肝腎。", type: "凶星疊加", strength: "弱" },
+    { names: ["禍害", "絕命"], description: "「禍害」的口舌是非與「絕命」的衝動極端結合，導致脾氣暴躁，言語上不屈服，易招小人。財運不佳，容易因小人或衝動投資而破財。健康方面需注意因情緒不穩引發的疾病，如消化系統、婦科。", type: "凶星疊加", strength: "弱" },
+    { names: ["絕命", "禍害"], description: "「絕命」的極端波動與「禍害」的口舌是非結合，可能導致因衝動言行而招惹官司或小人，財運不穩，投資易失敗。健康方面需注意因情緒化導致的疾病或意外，如心血管、肝腎。", type: "凶星疊加", strength: "弱" },
+    { names: ["五鬼", "禍害"], description: "「五鬼」的詭變與「禍害」的口舌是非相連，可能導致小人作祟，言語攻擊，使得人際關係更加複雜，容易遭受惡意誹謗或無端捲入口舌之爭。健康方面需注意心臟病等問題。", type: "凶星疊加", strength: "中" },
+    { names: ["禍害", "五鬼"], description: "「禍害」的口舌是非與「五鬼」的變動詭譎結合，可能導致說話不算數，言行反覆，易招小人。健康方面需注意心臟病，並可能因言語不當引發意外或血光之災。", type: "凶星疊加", strength: "中" },
+
+    // 吉凶相伴，吉在前 (Auspicious followed by Inauspicious - Healing/Mitigation)
+    { names: ["天醫", "絕命"], description: "數字中雖然包含「絕命」可能帶來的波動與耗損，但其前的「天醫」磁場帶來強大的財富和智慧能量，有助於緩解「絕命」的負面衝擊，甚至能將危機轉化為機遇，逢凶化吉。此組合在感情上容易感動，敢於付出，但對感情可能缺乏規劃，需注意理性。天醫可化解絕命帶來的錢財消耗與感情波動。", isHealing: true, strength: "強" },
+    { names: ["天醫", "五鬼"], description: "「五鬼」的詭譎與不穩定若與「天醫」相鄰，智慧和財富能量將有助於使用者辨識陷阱、規避風險，甚至將其創新思維引導至有利方向，降低負面衝擊。此組合在投資上若能得到天醫的引導，可將被遮蔽的視野拉回正確方向，但錢財可能來得快去得也快。", isHealing: true, strength: "中" },
+    { names: ["天醫", "六煞"], description: "「六煞」可能帶來情感或人際上的不順，但若其前有「天醫」磁場，則智慧和財富的能量可幫助使用者更理性地處理情感問題，或在財富上得到支持，從而降低六煞的負面作用。財富來源可能與服務業、女性行業或應酬相關。", isHealing: true, strength: "中" },
+    { names: ["天醫", "禍害"], description: "「禍害」雖易引起口舌是非與疾病，但「天醫」的財富與智慧能量可幫助使用者在面對挑戰時保持理性，降低負面影響。然而，此組合也可能導致對金錢和感情的抱怨，甚至有錢後招小人，感情上易發生口角，需保持警惕。", isHealing: true, strength: "中" },
+    { names: ["延年", "絕命"], description: "「絕命」的衝動與波動若與「延年」相鄰，延年的領導力與決斷力有助於穩定局勢，減少因衝動帶來的損失。此組合能提升應對挑戰的能力，使事業發展更為穩健，但在人際關係上仍需注意。", isHealing: true, strength: "中" },
+    { names: ["延年", "五鬼"], description: "在「五鬼」的變動與破壞能量前有「延年」磁場，預示著擁有足夠的專業能力和決斷力來應對突發變故或小人干擾，能有效管理混亂局面。此組合比單獨的五鬼磁場更能捕捉重點，更有規劃性，能將創意轉化為實際成果。", isHealing: true, strength: "中" },
+    { names: ["延年", "六煞"], description: "「六煞」的情感與人際困擾若與「延年」相鄰，延年的沉穩與責任感可助使用者穩定情緒，有效管理和解決人際糾紛，降低負面影響。此組合能使人際交往更具智慧，不易被欺騙，同時也更注重家庭，有助於建立穩定關係。延年可壓制六煞的情緒化與爛桃花，使人際和感情更穩定。", isHealing: true, strength: "強" },
+    { names: ["延年", "禍害"], description: "「禍害」雖易引起口舌是非與疾病，但「延年」的沉穩與責任感可助使用者控制急躁脾氣，減少言語衝突，並以專業能力應對健康挑戰，降低凶險。此組合在事業上可能因小人而能力下降，需注意提防。", isHealing: true, strength: "中" },
+    { names: ["生氣", "絕命"], description: "儘管數字中出現「絕命」的極端特性，其前的「生氣」磁場能帶來貴人相助與活力，有助於在困境中找到轉機，改善人際關係，減輕負面影響。此組合能使人在面對挑戰時保持樂觀，並獲得外部支持。", isHealing: true, strength: "強" },
+    { names: ["生氣", "五鬼"], description: "「生氣」的樂觀與「五鬼」的創意結合，使人閒不下來，腦筋靈活，鬼點子多，有利於事業發展和突破。然而，此組合也可能導致防備心強，表面圓滑但內心不一定深交，甚至有算計朋友的嫌疑。", isHealing: true, strength: "中" },
+    { names: ["生氣", "六煞"], description: "「生氣」的貴人運與「六煞」的人際魅力結合，使人緣極佳，善於交際。此組合能有效緩解六煞帶來的感情不順和情緒問題，帶來更多正向的人際互動，但需警惕爛桃花。", isHealing: true, strength: "中" },
+    { names: ["生氣", "禍害"], description: "「禍害」的口舌與疾病困擾若與「生氣」相鄰，樂觀的態度和良好的人緣可緩解負面情緒，透過貴人幫助解決糾紛，並保持積極心態面對健康問題。此組合能有效化解禍害的負面影響，使身體更快恢復。", isHealing: true, strength: "強" },
+
+    // 凶星在前，吉星在後 (Inauspicious followed by Auspicious - Mitigation/Transformation)
+    { names: ["絕命", "天醫"], description: "數字中雖然包含代表波動與耗損的「絕命」磁場，但緊隨其後的「天醫」磁場能帶來財富、智慧與健康，具有強大的化解能力，有助於將此凶數的負面影響轉化為正向能量，逢凶化吉。此組合在投資失利後，若能得到天醫的引導，可重回正軌，但仍需謹慎。", isHealing: true, strength: "強" },
+    { names: ["絕命", "生氣"], description: "儘管出現了代表極端起伏的「絕命」磁場，但隨後的「生氣」磁場能帶來貴人相助與活力，有效改善人際關係和整體運勢，使困境得以緩解，並在逆境中找到轉機。此組合有助於絕命者在困難時獲得支持。", isHealing: true, strength: "中" },
+    { names: ["絕命", "延年"], description: "面對代表波動與耗損的「絕命」磁場，其後的「延年」磁場則帶來了強大的決斷力與責任感，暗示能夠有效應對挑戰，穩定局面，減少不良影響，並在事業上取得突破。此組合能使絕命者的衝動行為有所收斂。", isHealing: true, strength: "中" },
+    { names: ["五鬼", "天醫"], description: "「五鬼」的變動與破壞能量若與「天醫」相鄰，智慧和財富能量將有助於使用者辨識陷阱、規避風險，甚至將其創新思維引導至有利方向，降低負面衝擊。此組合能將五鬼的鬼點子轉化為賺錢的機會，但錢財可能來得快去得也快。", isHealing: true, strength: "中" },
+    { names: ["五鬼", "延年"], description: "「五鬼」的詭譎多變若與「延年」相鄰，延年的專業能力和規劃性有助於使用者應對突發變故，使五鬼的創意更具方向性，減少虎頭蛇尾的現象。此組合比單獨的五鬼磁場更能捕捉重點，更有規劃性。", isHealing: true, strength: "中" },
+    { names: ["六煞", "延年"], description: "「六煞」的情感與人際困擾若與「延年」相鄰，延年的沉穩與責任感可助使用者穩定情緒，有效管理和解決人際糾紛，降低負面影響。此組合能壓制六煞的負面能量，帶來正面能量，使人際交往更具智慧，不易被欺騙，並有利於家庭和諧。", isHealing: true, strength: "強" },
+    { names: ["禍害", "生氣"], description: "數字中「禍害」的出現可能帶來口舌是非與疾病，而緊接的「生氣」則能帶來貴人與樂觀心態，有效化解禍害的負面影響，使人際關係改善，身體健康狀況好轉。此組合是禍害的強力解藥。", isHealing: true, strength: "強" },
+    { names: ["禍害", "延年"], description: "面對「禍害」的口舌是非與疾病困擾，其後的「延年」磁場則帶來了強大的決斷力與責任感，暗示能夠有效應對挑戰，穩定局面，減少不良影響，並將口才用於正道。此組合有助於禍害能量的轉化。", isHealing: true, strength: "中" },
+
+    // 連續吉數 - 汎用描述
+    { names: ["吉數", "吉數"], type: "generic-positive", description: "此處為兩個吉數磁場連續出現，預示著正向能量的連鎖效應，好事將會不斷累積，例如財運亨通後事業更上一層樓，吉上加吉。", strength: "中" },
+    // 連續凶數 - 汎用描述
+    { names: ["凶數", "凶數"], type: "generic-negative", description: "此處為兩個凶數磁場連續出現，需特別留意，這可能加劇負面影響，挑戰性較高，例如財務波動後又面臨健康問題，需謹慎應對。", strength: "中" },
+
+    // 新增的組合意義 (根據網路資訊擴充)
+    { names: ["天醫", "貴人"], description: "「天醫」結合「貴人」（生氣）代表賺錢後對朋友很大方，人脈廣且財運亨通，貴人帶財。", type: "吉星疊加", strength: "強" }, 
+    { names: ["天醫", "六煞"], description: "「天醫」結合「六煞」代表賺錢可能花在家庭或女性身上，或因感情之事而有財務流失。", type: "吉凶相伴", strength: "中" }, 
+    { names: ["天醫", "絕命"], description: "「天醫」結合「絕命」代表賺錢就去投資，或花費，特別能花錢。財富來得快去得也快，需要謹慎理財。", type: "吉凶相伴", strength: "中" }, 
+    { names: ["生氣", "絕命"], description: "貴人讓你有花錢或投資的衝動，可能導致破財。", type: "吉凶相伴", strength: "弱" },
+    { names: ["生氣", "伏位"], description: "貴人多多，人脈廣闊且穩定，但可能過於安於現狀。", type: "吉星疊加", strength: "弱" },
+    { names: ["五鬼", "延年"], description: "想法新穎，具備規劃性，頭腦聰明且思考有深度，但可能固執己見或有熬夜習慣。", type: "凶星吉化", strength: "中" },
+    { names: ["六煞", "延年"], description: "心思細膩中蘊含智慧，不易被欺騙，傾向於守家顧家。", type: "凶星吉化", strength: "強" },
+    { names: ["禍害", "絕命"], description: "敢說話但易衝動，脾氣暴躁，容易招惹小人並破財。", type: "凶星疊加", strength: "弱" },
+    { names: ["六煞", "五鬼"], description: "交際圓滑但城府深，可能帶有欺騙性質，易因感情問題導致債務沉重或破財。", type: "凶星疊加", strength: "最弱" },
+    { names: ["六煞", "禍害"], description: "因心思細膩而煩躁，易與人爭吵，可能因感情問題破財。", type: "凶星疊加", strength: "弱" },
+];
+
+// 靜態的「重要考量與建議」HTML
+const staticConsiderationsHtml = `
+    <div class="p-6 rounded-xl shadow-lg bg-white border border-gray-300 mt-8">
+        <h3 class="text-xl font-bold text-center mb-3 text-gray-800">重要考量與建議：</h3>
+        <p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>1. 陰陽平衡：</strong> 數字磁場強調陰陽平衡，即奇數（陽）與偶數（陰）的協調。過多吉星或凶星都可能導致失衡，如同飲食過量或不足。最佳的數字組合應是陰陽制衡且相互促進，激發新的能量，而非全吉或全凶。</p>
+        <p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>2. 號碼層次影響：</strong> 在手機號碼等長數字序列中，末兩碼被視為核心，決定願望目標和吉凶；末四碼是重心，影響目標達成率；整組數字則代表整體運勢和格局，如同八字本命命格的優劣。因此，選擇號碼需全面考量這些層次。</p>
+        <p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>3. 個人命格契合（五行相生相剋）：</strong> 數字能量學的應用效果會因個人先天命格（如八字五行、生辰數碼）的不同而異。同一組數字對不同人可能產生不同影響，因為其磁場會與個人固有能量獨特互動。例如，如果命盤中缺水，選擇對應水元素（如數字9, 0）的組合可調和能量；而某些數字組合的五行屬性可能與您的命格相剋，需謹慎避免。建議結合個人命理分析，以達到最佳的趨吉避凶效果。</p>
+        <p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>4. 數字能量的動態性：</strong> 數字磁場的能量並非靜態，而是動態且複雜的。一個號碼串中的每個數字都像一個音符，它們的排列組合才能奏出完整的生命樂章。理解這種疊加效應，有助於精準規劃數字序列，以實現期望的能量流動和人生劇本。</p>
+        <p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>5. 女性延年磁場的考量：</strong> 對於女性而言，過強的延年磁場（如19/91、87/78）可能導致「大女主情結」，使其過於強勢獨立，對婚姻和家庭產生不利影響，甚至導致婚姻不順。在推薦時應特別注意此點。</p>
+        <p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>6. 避免數字0的尾號：</strong> 數字0作為號碼尾數時，可能導致努力功虧一簣，即使付出再多，也難以實質擁有或累積成果，有「四大皆空」的風險，應盡量避免。</p>
+        <p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>7. 數字磁場的平衡與化解：</strong> 凶星並非全然負面，它們的強烈能量若能被吉星有效制化，亦能轉化為正向力量。例如，天醫可化解絕命的耗損，延年能壓制六煞的情緒化，而「生氣+天醫+延年」組合能強力化解五鬼的負面影響，生氣+延年/伏位/生氣能化解禍害。</p>
+    </div>
+`;
+
+
+function App() {
+    // State variables for inputs
+    const [numberInput, setNumberInput] = useState('');
+    const [customPurposeInput, setCustomPurposeInput] = useState('');
+    const [selectedGender, setSelectedGender] = useState('prefer_not_to_say');
+    const [desiredLengthInput, setDesiredLengthInput] = useState('');
+
+    // State variables for display results and errors
+    const [analysisErrorMessage, setAnalysisErrorMessage] = useState('');
+    const [analysisResults, setAnalysisResults] = useState(null); // Stores detailed meanings for analysis
+    const [overallSummary, setOverallSummary] = useState(null);
+
+    const [recommendationErrorMessage, setRecommendationErrorMessage] = useState('');
+    const [recommendationResults, setRecommendationResults] = useState([]);
+    const [showRecommendationConsiderations, setShowRecommendationConsiderations] = useState(false);
+    const [showReRollButton, setShowReRollButton] = useState(false);
+
+    // 輔助函數：根據數字組合查找其含義
+    const findMeaning = (numPair) => {
+        for (const categoryKey in numberMeanings) {
+            const category = numberMeanings[categoryKey];
+            if (category.combinations.includes(numPair)) {
+                return category;
+            }
+        }
+        return null; // 未找到
+    };
+
+    // 函數：預處理數字字符串，處理特殊數字組合的優先級，如X5Y，X0Y
+    const preprocessNumberString = (inputNumStr) => {
+        let processedResult = [];
+        let i = 0;
+        while (i < inputNumStr.length) {
+            // Check for X5Y (where Y is not 0) - this is the "most auspicious 5" rule
+            if (i + 2 < inputNumStr.length && inputNumStr[i+1] === '5' && inputNumStr[i+2] !== '0') {
+                const X = inputNumStr[i];
+                const Y = inputNumStr[i+2];
+                // Specifically handle X5Y like 951 -> 9191 or 159 -> 1919
+                if ((X === '9' && Y === '1') || (X === '1' && Y === '9')) {
+                    processedResult.push(X);
+                    processedResult.push(Y);
+                    processedResult.push(X);
+                    processedResult.push(Y);
+                    i += 3; // Skip X5Y
+                    continue;
+                }
+            }
+
+            // Default processing for two-digit pairs or single digits
+            processedResult.push(inputNumStr[i]);
+            i++;
+        }
+        return processedResult.join('');
+    };
+
+    // 函數：生成兩位數組合並應用特殊規則（0/5開頭，夾0/夾5）
+    const generatePairs = (rawNumStr) => {
+        let pairs = [];
+        let i = 0;
+        while (i < rawNumStr.length - 1) {
+            const firstDigit = rawNumStr[i];
+            const secondDigit = rawNumStr[i+1];
+            let lookupPair = firstDigit + secondDigit;
+            let originalPair = firstDigit + secondDigit;
+            let ruleApplied = "";
+
+            // Check for 0X or 5X (where 0/5 are leading digits)
+            if ((firstDigit === '0' || firstDigit === '5') && rawNumStr.length > 1) {
+                lookupPair = secondDigit + secondDigit; // Repeat the next digit
+                ruleApplied = `伏位 (${firstDigit}開頭)`;
+                pairs.push({ originalPair, lookupPair, ruleApplied });
+                i++; // Move to the next digit to form the next pair
+                continue;
+            }
+
+            // Check for X0Y or X5Y (夾0 / 夾5) where 0 or 5 is truly embedded
+            // This will be caught when length of original segment is 3.
+            if (i + 2 < rawNumStr.length) {
+                const middleDigit = rawNumStr[i+1];
+                const thirdDigit = rawNumStr[i+2];
+                if (middleDigit === '0' || middleDigit === '5') {
+                    // This segment is X0Y or X5Y. The lookup pair for the first pair (X Y) should still be X Y
+                    // But the interpretation for X_Y will be added in overall summary
+                    // For the purpose of generating 2-digit pairs, we still consider X and Y directly related.
+                    // We will add a special flag to indicate this was part of a "夾" sequence for later detailed analysis.
+                    // The primary 2-digit pairs are still XY and YZ.
+                    pairs.push({
+                        originalPair: firstDigit + middleDigit + thirdDigit, // Store the 3-digit original for context
+                        lookupPair: firstDigit + thirdDigit, // The actual pair to look up meaning
+                        ruleApplied: `夾${middleDigit} (中宮${middleDigit}影響)`
+                    });
+                    i += 2; // Skip these three digits as one conceptual unit for "夾" rule
+                    continue;
+                }
+            }
+            
+            // Default two-digit pair
+            pairs.push({ originalPair, lookupPair, ruleApplied });
+            i++;
+        }
+        return pairs;
+    };
+
+
+    // 輔助函數：生成整體數字磁場總結的HTML內容 (不含重要考量與建議)
+    const generateOverallSummaryHtml = (detailedMeanings, goodCount, badCount, generatedPairs, gender = 'prefer_not_to_say') => {
+        let overallSummaryContentHtml = `
+            <div class="p-6 rounded-xl shadow-lg bg-white border border-blue-300">
+                <h3 class="text-xl font-bold text-center mb-3 text-gray-800">整體數字磁場總結與分析</h3>
+        `;
+
+        // 綜合評價的基礎
+        let generalVerdict = '';
+        let generalVerdictColor = '';
+        if (goodCount > badCount * 2) {
+            generalVerdict = '這組數字的整體磁場非常吉利，正向能量非常強大！';
+            generalVerdictColor = 'text-green-700';
+        } else if (badCount > goodCount * 2) {
+            generalVerdict = '這組數字的整體磁場較為凶險，負面能量較為突出，需要特別留意。';
+            generalVerdictColor = 'text-red-700';
+        } else if (goodCount > badCount) {
+            generalVerdict = '這組數字的整體磁場偏向吉利，正向能量佔主導。';
+            generalVerdictColor = 'text-green-600';
+        } else if (badCount > goodCount) {
+            generalVerdict = '這組數字的整體磁場偏向凶險，負面能量需多加留意。';
+            generalVerdictColor = 'text-red-600';
+        } else {
+            generalVerdict = '這組數字的整體磁場吉凶參半，正負能量相互影響。';
+            generalVerdictColor = 'text-yellow-700';
+        }
+
+        overallSummaryContentHtml += `<p class="text-lg text-center ${generalVerdictColor} font-semibold">${generalVerdict}</p>`;
+        overallSummaryContentHtml += `<p class="text-base text-center text-gray-600 mt-2">吉數組合數量: <span class="font-bold text-green-700">${goodCount}</span> 個, 凶數組合數量: <span class="font-bold text-red-700">${badCount}</span> 個</p>`;
+
+        overallSummaryContentHtml += `<p class="text-lg font-bold text-gray-800 mt-5 mb-3 text-center">數字組合的動態影響與相互作用：</p>`;
+        let hasInteractionAnalysis = false;
+        const interactionsAdded = new Set(); // 用於避免重複的互動分析
+
+        // 遍歷所有兩位數組合進行互動分析
+        for (let i = 0; i < detailedMeanings.length; i++) {
+            const current = detailedMeanings[i];
+            const next = detailedMeanings[i + 1];
+            const nextNext = detailedMeanings[i + 2]; // For three-digit rules
+
+            if (current.category === "未知") continue;
+
+            // 檢查特定的三位數化解組合
+            let specificHealingApplied = false;
+            for (const rule of specificHealingRules) {
+                if (rule.pattern.length === 3 &&
+                    current.name === rule.pattern[0] &&
+                    next && next.name === rule.pattern[1] &&
+                    nextNext && nextNext.name === rule.pattern[2]) {
+
+                    let targetFound = false;
+                    if (rule.target) {
+                        if (!Array.isArray(rule.target)) { // Single target
+                            for(let j = i; j < detailedMeanings.length && j <= i + 3; j++) { // Check current + up to 3 next for target
+                                if(detailedMeanings[j] && detailedMeanings[j].name === rule.target) {
+                                    targetFound = true;
+                                    break;
+                                }
+                            }
+                        } else { // Array of targets
+                            for(let k = i; k < detailedMeanings.length && k <= i + 3; k++) { // Check current + up to 3 next for any target
+                                if(detailedMeanings[k] && rule.target.includes(detailedMeanings[k].name)) {
+                                    targetFound = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        targetFound = true; // If no specific target, the pattern itself is the focus
+                    }
+
+                    if(targetFound) {
+                        const interactionKey = `${current.originalPair}-${next.originalPair}-${nextNext.originalPair}-${rule.description}`;
+                        if (!interactionsAdded.has(interactionKey)) {
+                            overallSummaryContentHtml += `<p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>${current.originalPair}${next ? ' ' + next.originalPair : ''}${nextNext ? ' ' + nextNext.originalPair : ''} (${current.name} + ${next.name} + ${nextNext.name}):</strong> ${rule.description}</p>`;
+                            hasInteractionAnalysis = true;
+                            interactionsAdded.add(interactionKey);
+                        }
+                        specificHealingApplied = true;
+                        i += 2; // Skip these three analyzed digits
+                        break;
+                    }
+                }
+                // 檢查單個磁場的化解規則 (例如 天醫 化絕命)
+                if (rule.pattern.length === 1 && current.name === rule.pattern[0] && rule.target) {
+                    let targetFound = false;
+                    let affectedPairOriginal = "";
+                    // Check if current or next digit is the target凶數
+                    if (next && (Array.isArray(rule.target) ? rule.target.includes(next.name) : next.name === rule.target)) {
+                        targetFound = true;
+                        affectedPairOriginal = next.originalPair;
+                    } else if (i > 0 && detailedMeanings[i-1] && (Array.isArray(rule.target) ? rule.target.includes(detailedMeanings[i-1].name) : detailedMeanings[i-1].name === rule.target)) {
+                        targetFound = true;
+                        affectedPairOriginal = detailedMeanings[i-1].originalPair;
+                    }
+
+                    if (targetFound) {
+                        const description = rule.description.replace(new RegExp(rule.target + '(s)?', 'g'), match => {
+                            return Array.isArray(rule.target) ? match : `「${match}」（組合「${affectedPairOriginal}」）`;
+                        });
+                        const interactionKey = `${current.originalPair}-${affectedPairOriginal}-${rule.description}`;
+                        if (!interactionsAdded.has(interactionKey)) {
+                            overallSummaryContentHtml += `<p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>${current.originalPair} (${current.name}化解):</strong> ${description}</p>`;
+                            hasInteractionAnalysis = true;
+                            interactionsAdded.add(interactionKey);
+                        }
+                        specificHealingApplied = true;
+                        break;
+                    }
+                }
+            }
+            if (specificHealingApplied) continue;
+
+            if (i + 1 >= detailedMeanings.length) continue; // 確保有下一個數字進行兩兩分析
+
+            // 檢查兩兩組合的疊加效應和化解
+            let foundCombinedMeaning = false;
+            for (const rule of combinedMeaningRules) {
+                if (rule.names.length === 2 &&
+                    current.name === rule.names[0] && next.name === rule.names[1]) {
+                    
+                    let ruleDescription = rule.description;
+                    // Add gender-specific note for Yan Nian
+                    if (gender === 'female' && (current.name === '延年' || next.name === '延年')) {
+                        const yanNianPairs = numberMeanings['延年'].combinations.slice(0,4); // Stronger Yan Nian pairs
+                        if (yanNianPairs.includes(current.lookupPair) || (next && yanNianPairs.includes(next.lookupPair))) {
+                            ruleDescription += `<span class="text-red-500 font-semibold"> (女性請注意：強延年磁場（如19/91、87/78）可能導致過於強勢，影響婚姻和諧。)</span>`;
+                        }
+                    }
+
+                    const interactionKey = `${current.originalPair}-${next.originalPair}-${ruleDescription}`;
+                    if (!interactionsAdded.has(interactionKey)) {
+                        overallSummaryContentHtml += `<p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>${current.originalPair} + ${next.originalPair} (${current.name} + ${next.name}):</strong> ${ruleDescription}</p>`;
+                        hasInteractionAnalysis = true;
+                        interactionsAdded.add(interactionKey);
+                    }
+                    foundCombinedMeaning = true;
+                    break;
+                }
+            }
+
+            // 如果沒有找到特定的兩兩組合，但有連續吉數或凶數的通用描述
+            if (!foundCombinedMeaning) {
+                if (current.category === "四吉數" && next.category === "四吉數") {
+                    const genericRule = combinedMeaningRules.find(r => r.type === "generic-positive");
+                    const interactionKey = `${current.originalPair}-${next.originalPair}-${genericRule.description}`;
+                    if (genericRule && !interactionsAdded.has(interactionKey)) {
+                        overallSummaryContentHtml += `<p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>${current.originalPair} + ${next.originalPair} (連續吉數):</strong> ${genericRule.description}</p>`;
+                        hasInteractionAnalysis = true;
+                        interactionsAdded.add(interactionKey);
+                    }
+                } else if (current.category === "四凶數" && next.category === "四凶數") {
+                    const genericRule = combinedMeaningRules.find(r => r.type === "generic-negative");
+                    const interactionKey = `${current.originalPair}-${next.originalPair}-${genericRule.description}`;
+                    if (genericRule && !interactionsAdded.has(interactionKey)) {
+                        overallSummaryContentHtml += `<p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>${current.originalPair} + ${next.originalPair} (連續凶數):</strong> ${genericRule.description}</p>`;
+                        hasInteractionAnalysis = true;
+                        interactionsAdded.add(interactionKey);
+                    }
+                }
+            }
+        }
+
+
+        if (!hasInteractionAnalysis) {
+            overallSummaryContentHtml += `<p class="text-base text-gray-700 mt-5 text-center">此數字序列較為簡短或組合模式較為單純，未見明顯的數字組合互動影響。</p>`;
+        }
+
+        // 數字0和5的特殊影響
+        overallSummaryContentHtml += `<p class="text-lg font-bold text-gray-800 mt-5 mb-3 text-center">數字0與5的特殊影響與配對規則：</p>`;
+        let hasZeroFiveImpact = false;
+        for (let i = 0; i < generatedPairs.length; i++) {
+            const pairInfo = generatedPairs[i];
+            const originalPair = pairInfo.originalPair; // This might be 2 or 3 digits
+            const lookupPair = pairInfo.lookupPair; // This is always 2 digits
+            const ruleApplied = pairInfo.ruleApplied;
+            const meaning = findMeaning(lookupPair);
+
+            let specific05Impact = '';
+
+            // Handle X5Y (最棒的5) where 5 is skipped, but mentioned as magnifier
+            if (ruleApplied.includes("中宮5")) {
+                specific05Impact = `原始組合 ${originalPair} 中，數字5作為中位數被「跳過」配對（即前後數字直接配對為 ${lookupPair}），但它同時「放大」了前後數字的磁場能量。例如，若前後為吉數（如${lookupPair}），則吉上加吉，能量增強；若為凶數，則凶上加凶，負面影響加倍。它是一個能量放大器。`;
+            }
+            // Handle 0X or 5X (伏位開頭)
+            else if (ruleApplied.includes("伏位")) {
+                const leadingDigit = originalPair[0];
+                const repeatedDigit = originalPair[1]; // This is the digit that gets repeated
+                if (leadingDigit === '0') {
+                    specific05Impact = `原始組合 ${originalPair} 中，數字0在開頭被視為「伏位」，導致其後的數字（${repeatedDigit}）被「重複」配對（即配對為 ${lookupPair}）。這代表相關磁場能量被「隱藏」或「弱化」，可能造成付出多而收穫少，或能力不顯，且容易感到疲勞。`;
+                } else if (leadingDigit === '5') {
+                    specific05Impact = `原始組合 ${originalPair} 中，數字5在開頭被視為「伏位」，導致其後的數字（${repeatedDigit}）被「重複」配對（即配對為 ${lookupPair}）。這會使相關磁場能量被「顯性重複」或「放大」，使其影響更為顯著和主動。`;
+                }
+            }
+            // Handle X0 (0 at the end) - only for 2-digit original pairs ending in 0
+            else if (originalPair.length === 2 && originalPair.endsWith('0')) {
+                 specific05Impact = `原始組合 ${originalPair} 中，數字0在結尾，代表能量的「空」與「耗散」，也可能意味著辛勞付出卻成就他人。這意味著即使努力，最終可能功虧一簣，無論財富、事業、感情、健康都可能難以實質擁有或累積，有「四大皆空」的風險，應盡量避免。`;
+            }
+            // Handle X0Y (夾0) or X5Y (夾5) where 0 or 5 is truly embedded and originalPair length is 3
+            else if (originalPair.length === 3 && (originalPair[1] === '0' || originalPair[1] === '5')) {
+                const middleDigit = originalPair[1];
+                const outerDigitsMeaning = findMeaning(originalPair[0] + originalPair[2]); // Find meaning of the "夾"ed pair
+
+                if (middleDigit === '0') { // It's a 夾0
+                    if (outerDigitsMeaning) {
+                        switch (outerDigitsMeaning.name) {
+                            case "天醫": specific05Impact = `原始組合 ${originalPair} 中，數字0夾在天醫磁場內，代表錢財隱性、投資被套、暗戀或夫妻分居，財富和感情的能量被隱藏或阻礙，易開智慧。`; break;
+                            case "延年": specific05Impact = `原始組合 ${originalPair} 中，數字0夾在延年磁場內，代表工作能力不被看見、事業卡住、責任不明確，或有隱藏的健康問題（如頸椎、腰椎），壓力隱藏不表現出來。`; break;
+                            case "生氣": specific05Impact = `原始組合 ${originalPair} 中，數字0夾在生氣磁場內，代表朋友關係好但聚少離多、溝通較少，錢財意外耗損，或隱藏的腸胃問題，貴人可能無法實際幫助。`; break;
+                            case "禍害": specific05Impact = `原始組合 ${originalPair} 中，數字0夾在禍害磁場內，代表口語表達隱性（如廣告、客服）、小人不易察覺、有苦說不出，或隱性的口腔呼吸道疾病，愛面子但會冷戰。`; break;
+                            case "五鬼": specific05Impact = `原始組合 ${originalPair} 中，數字0夾在五鬼磁場內，代表思考、才華、變化被隱藏，行為變動外人看不到，或有隱藏的心臟血液問題，體質敏感易感受到陰性磁場。更自私，做事缺少安全感。`; break;
+                            case "六煞": specific05Impact = `原始組合 ${originalPair} 中，數字0夾在六煞磁場內，代表情感、細心、交際等被隱藏，易有隱藏的桃花或情人，情緒更壓抑憂鬱，缺乏抗壓性，或隱性的腸胃皮膚疾病。`; break;
+                            case "絕命": specific05Impact = `原始組合 ${originalPair} 中，數字0夾在絕命磁場內，代表錢財莫名流失、偏激行為被動發生（如不良嗜好），或自以為是但小聰明不易被發現，官司中多為被告。`; break;
+                            default: specific05Impact = `原始組合 ${originalPair} 中，數字0夾在中間，對其前後磁場能量產生隱藏或弱化作用。`; break;
+                        }
+                    } else {
+                        specific05Impact = `原始組合 ${originalPair} 中，數字0夾在中間，對其前後磁場能量產生隱藏或弱化作用。`;
+                    }
+                } else if (middleDigit === '5') { // It's a 夾5
+                    if (outerDigitsMeaning) {
+                        switch (outerDigitsMeaning.name) {
+                            case "天醫": specific05Impact = `原始組合 ${originalPair} 中，數字5夾在天醫磁場內，代表財富會延續，能量會增加，天醫所代表的事物會一下子凸顯出來，財運快速成功，事業發展加速。`; break;
+                            case "延年": specific05Impact = `原始組合 ${originalPair} 中，數字5夾在延年磁場內，代表喜歡表現和展現自己，才能有目共睹，學習成績和能力明顯提高，壓力會表現出來，責任心更強，有方向感。`; break;
+                            case "生氣": specific05Impact = `原始組合 ${originalPair} 中，數字5夾在生氣磁場內，代表樂觀開朗的情緒和貴人的幫助會更加明顯，腸胃問題也可能顯現。`; break;
+                            case "禍害": specific05Impact = `原始組合 ${originalPair} 中，數字5夾在禍害磁場內，代表會主動表達想法和感受，脾氣可能更暴躁，小人出現機率加大，身體問題可能已經顯現。`; break;
+                            case "五鬼": specific05Impact = `原始組合 ${originalPair} 中，數字5夾在五鬼磁場內，代表體質過敏可能已經表現，傷災血光現象明顯，感情中可能主動提出分手或有第三者介入，第六感明顯增強。`; break;
+                            case "六煞": specific05Impact = `原始組合 ${originalPair} 中，數字5夾在六煞磁場內，代表情感表達更為明顯，猶豫不決加劇，腸胃皮膚問題顯現，魅力和異性緣更為突出。`; break;
+                            case "絕命": specific05Impact = `原始組合 ${originalPair} 中，數字5夾在絕命磁場內，代表賭性更強，可能已投資或借錢給朋友，行動決斷力強，官司中可能為原告。`; break;
+                            default: specific05Impact = `原始組合 ${originalPair} 中，數字5夾在中間，對其前後磁場能量產生放大或凸顯作用。`; break;
+                        }
+                    } else {
+                        specific05Impact = `原始組合 ${originalPair} 中，數字5夾在中間，對其前後磁場能量產生放大或凸顯作用。`;
+                    }
+                }
+            }
+
+
+            if (specific05Impact) {
+                overallSummaryContentHtml += `<p class="text-base text-gray-700 mb-2 leading-relaxed"><strong>${originalPair}:</strong> ${specific05Impact}</p>`;
+                hasZeroFiveImpact = true;
+            }
+        }
+        if (!hasZeroFiveImpact) {
+            overallSummaryContentHtml += `<p class="text-base text-gray-700 mt-2 text-center">此數字序列中未見明顯的數字0或5對磁場的特殊影響。</p>`;
+        }
+
+        overallSummaryContentHtml += `</div>`; // Close overall summary content div
+        return overallSummaryContentHtml;
+    };
+
+    // 輔助函數：根據自定義用途選擇吉星組合
+    const getAuspiciousCombosByPurpose = (customPurpose) => {
+        const purposeKeywords = {
+            "財運": ["天醫", "生氣", "伏位", "延年"],
+            "事業": ["延年", "天醫", "生氣", "伏位"],
+            "感情": ["天醫", "生氣", "延年", "伏位"],
+            "健康": ["天醫", "生氣", "延年", "伏位"],
+            "綜合": ["天醫", "生氣", "延年", "伏位"],
+            "車牌": ["生氣", "延年", "天醫", "伏位"], // 適合出行平安、事業順遂
+            "銀行": ["天醫", "伏位", "延年"], // 適合財富積累、穩健守財
+            "密碼": ["伏位", "延年", "天醫"], // 適合穩固安全、防止洩漏
+            "投資": ["天醫", "延年", "生氣"], // 適合財富增長、決策力
+            "創業": ["延年", "天醫", "生氣"], // 創業成功，需要領導力、財富和貴人
+            "升遷": ["延年", "生氣"], // 升遷需要領導力和貴人相助
+        };
+
+        for (const key in purposeKeywords) {
+            if (customPurpose.includes(key)) {
+                return purposeKeywords[key];
+            }
+        }
+        return purposeKeywords["綜合"]; // 默認綜合運勢
+    };
+
+    // 輔助函數：獲取一個隨機的吉星2位數組合
+    const getRandomAuspicious2DigitCombo = (purposeStars) => {
+        const randomStarName = purposeStars[Math.floor(Math.random() * purposeStars.length)];
+        const combinations = numberMeanings[randomStarName].combinations;
+        // 避免推薦以0或5開頭的組合，或者以0結尾的組合，這些通常有特殊或負面影響
+        let selectedCombo = '';
+        let attempts = 0;
+        const maxAttempts = 100; // 防止無限循環
+
+        while (attempts < maxAttempts) {
+            const combo = combinations[Math.floor(Math.random() * combinations.length)];
+            // Ensure the generated combo is not '0X', '5X' (where X is any digit), or 'X0'
+            if (!combo.startsWith('0') && !combo.startsWith('5') && !combo.endsWith('0')) {
+                selectedCombo = combo;
+                break;
+            }
+            attempts++;
+        }
+        // 如果嘗試多次仍然無法找到符合條件的，則退而求其次，選擇任意一個
+        if (!selectedCombo) {
+             selectedCombo = combinations[Math.floor(Math.random() * combinations.length)];
+        }
+        return selectedCombo;
+    };
+
+    // 處理分析按鈕點擊事件
+    const handleAnalyze = () => {
+        setAnalysisErrorMessage('');
+        setAnalysisResults(null);
+        setOverallSummary(null);
+
+        if (!numberInput.match(/^\d+$/)) {
+            setAnalysisErrorMessage('請輸入有效的數字。');
+            return;
+        }
+        if (numberInput.length < 2) {
+            setAnalysisErrorMessage('請輸入至少兩位數字進行分析。');
+            return;
+        }
+
+        // const processedStr = preprocessNumberString(numberInput); // This is not strictly needed for the main analysis flow in the current structure
+        const generatedPairs = generatePairs(numberInput);
+
+        let goodCount = 0;
+        let badCount = 0;
+        const detailedMeanings = [];
+
+        if (generatedPairs.length > 0) {
+            generatedPairs.forEach((pairInfo) => {
+                const meaning = findMeaning(pairInfo.lookupPair);
+                if (meaning) {
+                    if (meaning.category === '四吉數') {
+                        goodCount++;
+                    } else if (meaning.category === '四凶數') {
+                        badCount++;
+                    }
+                    detailedMeanings.push({ ...meaning, originalPair: pairInfo.originalPair, lookupPair: pairInfo.lookupPair });
+                } else {
+                    detailedMeanings.push({ name: "未知", category: "未知", originalPair: pairInfo.originalPair, lookupPair: pairInfo.lookupPair });
+                }
+            });
+
+            setAnalysisResults(detailedMeanings);
+            const summaryHtml = generateOverallSummaryHtml(detailedMeanings, goodCount, badCount, generatedPairs, selectedGender);
+            setOverallSummary(summaryHtml);
+
+        } else {
+            setAnalysisErrorMessage('無法從輸入數字生成任何有效的數字組合。');
+        }
+    };
+
+    // 函數：生成推薦數字組合
+    const handleGenerateRecommendations = () => {
+        setRecommendationResults([]);
+        setShowReRollButton(false);
+        setRecommendationErrorMessage('');
+        setShowRecommendationConsiderations(false);
+
+        const purpose = customPurposeInput.trim();
+        const length = parseInt(desiredLengthInput);
+
+        if (!purpose) {
+            setRecommendationErrorMessage('請填寫希望提升的用途。');
+            return;
+        }
+        if (isNaN(length) || length < 2 || length % 2 !== 0) {
+            setRecommendationErrorMessage('請輸入一個有效的偶數長度 (至少2位)。');
+            return;
+        }
+
+        const purposeStars = getAuspiciousCombosByPurpose(purpose);
+        const recommendedCombos = [];
+
+        for (let i = 0; i < 5; i++) { // Generate 5 recommendations
+            let currentCombo = "";
+            const numPairsNeeded = length / 2;
+            for (let j = 0; j < numPairsNeeded; j++) {
+                currentCombo += getRandomAuspicious2DigitCombo(purposeStars);
+            }
+
+            // Analyze the generated combo for its meaning HTML
+            const generatedPairsForMeaning = generatePairs(currentCombo);
+
+            let goodCountForMeaning = 0;
+            let badCountForMeaning = 0;
+            const detailedMeaningsForMeaning = [];
+
+            generatedPairsForMeaning.forEach((pairInfo) => {
+                const meaning = findMeaning(pairInfo.lookupPair);
+                if (meaning) {
+                    if (meaning.category === '四吉數') {
+                        goodCountForMeaning++;
+                    } else if (meaning.category === '四凶數') {
+                        badCountForMeaning++;
+                    }
+                    detailedMeaningsForMeaning.push({ ...meaning, originalPair: pairInfo.originalPair, lookupPair: pairInfo.lookupPair });
+                } else {
+                    detailedMeaningsForMeaning.push({ name: "未知", category: "未知", originalPair: pairInfo.originalPair, lookupPair: pairInfo.lookupPair });
+                }
+            });
+
+            const comboMeaningHtml = generateOverallSummaryHtml(detailedMeaningsForMeaning, goodCountForMeaning, badCountForMeaning, generatedPairsForMeaning, selectedGender);
+            
+            recommendedCombos.push({
+                combo: currentCombo,
+                meaningHtml: comboMeaningHtml
+            });
+        }
+
+        if (recommendedCombos.length > 0) {
+            setRecommendationResults(recommendedCombos);
+            setShowReRollButton(true);
+            setShowRecommendationConsiderations(true);
+        } else {
+            setRecommendationErrorMessage('未能生成推薦組合，請嘗試重新選擇用途或長度。');
+        }
+    };
+
+
+    return (
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
+            <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl">
+                <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">易經數字磁場分析與推薦</h1>
+                <p className="text-gray-600 text-center mb-6">
+                    請輸入一組數字進行深度分析，或填寫用途、性別與長度獲取最佳數字組合推薦。
+                </p>
+
+                {/* 數字分析功能區塊 */}
+                <div className="mb-8 p-4 border border-blue-200 rounded-lg bg-blue-50">
+                    <h2 className="text-2xl font-bold text-center mb-4 text-blue-800">數字序列深度分析</h2>
+                    <div className="mb-6">
+                        <input
+                            type="text"
+                            id="numberInput"
+                            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                            placeholder="輸入數字序列 (例如: 0933894637, 26549, 49513)"
+                            value={numberInput}
+                            onChange={(e) => setNumberInput(e.target.value.replace(/\D/g, ''))}
+                        />
+                    </div>
+                    <button
+                        onClick={handleAnalyze}
+                        className="w-full bg-blue-600 text-white py-3 rounded-md shadow-md hover:bg-blue-700 transition duration-300 ease-in-out text-lg font-semibold"
+                    >
+                        分析數字磁場
+                    </button>
+                    {analysisErrorMessage && (
+                        <p className="text-red-600 text-center mt-4 text-sm">{analysisErrorMessage}</p>
+                    )}
+
+                    {analysisResults && (
+                        <div id="analysisResults" className="mt-8 space-y-4">
+                            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">單一組合分析</h3>
+                            {analysisResults.map((item, index) => (
+                                <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                                    <p className="text-lg font-semibold text-gray-700" dangerouslySetInnerHTML={{
+                                        __html: `原始組合: <span class="text-blue-700">${item.originalPair}</span> ${item.ruleApplied ? `<span class="ml-2 text-sm text-gray-500">(${item.ruleApplied}, 查找數字: <span class="font-bold">${item.lookupPair}</span>)</span>` : `<span class="ml-2 text-sm text-gray-500">(查找數字: <span class="font-bold">${item.lookupPair}</span>)</span>`}`
+                                    }}>
+                                    </p>
+                                    {item.category !== '未知' ? (
+                                        <>
+                                            <p className="mt-2 text-base text-gray-600">
+                                                <span className="font-medium">磁場類別:</span> {item.category} - <span className={`font-semibold ${item.category === '四吉數' ? 'text-green-700' : 'text-red-700'}`}>{item.name}</span>
+                                            </p>
+                                            <p className="mt-1 text-base text-gray-600">
+                                                <span className="font-medium">核心含義:</span> {item.coreMeaning}
+                                            </p>
+                                            <p className="mt-1 text-base text-gray-600">
+                                                <span className="font-medium">優點:</span> {item.advantages}
+                                            </p>
+                                            <p className="mt-1 text-base text-gray-600">
+                                                <span className="font-medium">缺點:</span> {item.disadvantages}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <p className="mt-2 text-base text-red-500">未找到此數字組合的含義。</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {overallSummary && (
+                        <div id="overallSummary" className="mt-8" dangerouslySetInnerHTML={{ __html: overallSummary }}></div>
+                    )}
+                </div>
+
+                {/* 數字推薦功能區塊 */}
+                <div className="p-4 border border-green-200 rounded-lg bg-green-50">
+                    <h2 className="text-2xl font-bold text-center mb-4 text-green-800">智慧數字組合推薦</h2>
+                    <div className="mb-4">
+                        <label htmlFor="customPurposeInput" className="block text-gray-700 text-lg font-medium mb-2">請填寫希望提升的用途 (例如: 車牌號碼, 銀行密碼, 財運數字) (限13字)：</label>
+                        <input
+                            type="text"
+                            id="customPurposeInput"
+                            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg"
+                            placeholder="例如: 車牌號碼, 銀行密碼, 財運數字"
+                            maxLength="13"
+                            value={customPurposeInput}
+                            onChange={(e) => setCustomPurposeInput(e.target.value)}
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 text-lg font-medium mb-2">您的性別：</label>
+                        <div className="flex space-x-4">
+                            <label className="inline-flex items-center text-lg">
+                                <input type="radio" name="gender" value="male" className="form-radio text-green-600 h-5 w-5" checked={selectedGender === 'male'} onChange={() => setSelectedGender('male')} />
+                                <span className="ml-2 text-gray-700">男性</span>
+                            </label>
+                            <label className="inline-flex items-center text-lg">
+                                <input type="radio" name="gender" value="female" className="form-radio text-pink-600 h-5 w-5" checked={selectedGender === 'female'} onChange={() => setSelectedGender('female')} />
+                                <span className="ml-2 text-gray-700">女性</span>
+                            </label>
+                            <label className="inline-flex items-center text-lg">
+                                <input type="radio" name="gender" value="prefer_not_to_say" className="form-radio text-gray-500 h-5 w-5" checked={selectedGender === 'prefer_not_to_say'} onChange={() => setSelectedGender('prefer_not_to_say')} />
+                                <span className="ml-2 text-gray-700">不透露</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div className="mb-6">
+                        <label htmlFor="desiredLengthInput" className="block text-gray-700 text-lg font-medium mb-2">希望推薦的數字長度 (偶數，例如: 4, 6, 8)：</label>
+                        <input
+                            type="number"
+                            id="desiredLengthInput"
+                            min="2"
+                            step="2"
+                            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg"
+                            placeholder="輸入數字長度 (例如: 6)"
+                            value={desiredLengthInput}
+                            onChange={(e) => setDesiredLengthInput(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        onClick={handleGenerateRecommendations}
+                        className="w-full bg-green-600 text-white py-3 rounded-md shadow-md hover:bg-green-700 transition duration-300 ease-in-out text-lg font-semibold"
+                    >
+                        獲取推薦組合
+                    </button>
+                    {recommendationErrorMessage && (
+                        <p className="text-red-600 text-center mt-4 text-sm">{recommendationErrorMessage}</p>
+                    )}
+
+                    {recommendationResults.length > 0 && (
+                        <div id="recommendationResults" className="mt-8 space-y-4">
+                            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">推薦數字組合</h3>
+                            {recommendationResults.map((item, index) => (
+                                <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-green-200 mb-4">
+                                    <p className="text-lg font-semibold text-gray-700">
+                                        推薦組合 {index + 1}: <span className="text-green-700">{item.combo}</span>
+                                    </p>
+                                    <div className="mt-2 text-base text-gray-600">
+                                        <span className="font-medium">組合分析:</span>
+                                        <div className="mt-1 p-2 bg-gray-50 rounded-md" dangerouslySetInnerHTML={{ __html: item.meaningHtml }}></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {showReRollButton && (
+                        <button
+                            onClick={handleGenerateRecommendations}
+                            className="w-full mt-4 bg-gray-400 text-white py-2 rounded-md shadow-md hover:bg-gray-500 transition duration-300 ease-in-out text-md font-semibold"
+                        >
+                            重新提供
+                        </button>
+                    )}
+
+                    {showRecommendationConsiderations && (
+                        <div id="recommendationConsiderations" className="mt-8" dangerouslySetInnerHTML={{ __html: staticConsiderationsHtml }}></div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default App;
